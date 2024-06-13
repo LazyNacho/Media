@@ -129,7 +129,58 @@ services:
     #  - traefik.http.routers.readarr.rule=Host(`readarr.example.com`)
     #  - traefik.http.services.readarr.loadbalancer.server.port=8787
     #  # Optional part for traefik middlewares
-    #  - traefik.http.routers.readarr.middlewares=local-ipwhitelist@file
+    #  - traefik.http.routers.readarr.middlewares=local-ipwhitelist@services:
+  
+  calibre:
+    image: ghcr.io/linuxserver/calibre
+    container_name: calibre
+    environment:
+      - PUID=$PUID #change this to your user's PID
+      - PGID=$PGID #change this to your user's PGID
+    volumes:
+      - path/to/your/calibre/config:/config #change before the ':'
+      - path/to/your/calibre/upload:/uploads #change before the ':'
+      - path/to/your/calibre/plugins:/plugins #change before the ':'
+      - path/to/your/CalibreLibrary:/Calibre_Library #this is where your ebooks will end up
+    ports:
+      - 8080:8080 #change before the ':' if necessary
+      - 8081:8081 #change before the ':' if necessary
+    restart: unless-stopped
+    networks:
+      - ebooks
+
+  calibre-web:
+    image: ghcr.io/linuxserver/calibre-web
+    container_name: calibre-web
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+    volumes:
+      - $DOCKERDIR/calibre/calibre-web:/config
+      - path/to/your/Calibre Library:/books
+    restart: unless-stopped
+    depends_on:
+      - calibre
+    ports:
+      - 8083:8083
+    networks:
+      - ebooks
+
+  readarr:
+    image: ghcr.io/linuxserver/readarr:nightly
+    container_name: readarr
+    environment:
+      - PUID=$PUID #change to your PID
+      - PGID=$PGID #change to your PGID
+    volumes:
+      - /path/to/your/docker/readarr:/config #change before the ':'
+      - /path/to/your/CalibreLibrary:/books #change before the ':'
+      - /path/to/your/downloads:/downloads  #change before the ':'
+    ports:
+      - 8787:8787
+    restart: unless-stopped
+    networks:
+      - ebooks
 
   # image used to bypass cloudflare for prowlarr
   flaresolverr:
@@ -189,6 +240,22 @@ services:
     depends_on:
       - gluetun
     network_mode: container:arr-suite-gluetun # use the gluetun container network (vpn killswitch)
+    restart: unless-stopped
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - VERSION=docker
+      - PLEX_CLAIM= #optional
+    volumes:
+      - /path/to/library:/config
+      - /path/to/tvseries:/tv
+      - /path/to/movies:/movies
     restart: unless-stopped
 
   # image used to manage media and stream it
@@ -261,3 +328,9 @@ services:
 #networks:
 #  proxy:
 #    external: true
+
+networks:
+  ebooks:
+    external: true
+
+
