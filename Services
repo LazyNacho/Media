@@ -19,8 +19,14 @@ Add network_mode: "container:gluetun" to your docker-compose.yml, provided Gluet
 QbitTorrent
 image: linuxserver/qbittorrent:latest
 
+flaresolverr:
+image: flaresolverr/flaresolverr:latest
+
 Prowlarr
 image: hotio/prowlarr:testing
+
+Flaresolverr
+image: ghcr.io/flaresolverr/flaresolverr:latest
 
 Sonarr
 image: linuxserver/sonarr:latest
@@ -30,6 +36,9 @@ image: linuxserver/radarr:latest
 
 Readarr
 image: ghcr.io/linuxserver/readarr:nightly
+
+overseerr:
+image: sctx/overseerr:latest
 
 Plex
 image: lscr.io/linuxserver/plex
