@@ -242,6 +242,21 @@ services:
     network_mode: container:arr-suite-gluetun # use the gluetun container network (vpn killswitch)
     restart: unless-stopped
 
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /path/to/sabnzbd/config:/config
+      - /path/to/downloads:/downloads #optional
+      - /path/to/incomplete/downloads:/incomplete-downloads #optional
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
