@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
 
-  # image used to index torrent links from the internet
+  # Prowlarr service to index torrent links
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
@@ -11,23 +11,30 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/configs/prowlarr:/config # database and Prowlarr configs
-    expose:
-      - 9696/tcp # web ui
-    ports:
-      - 9696:9696/tcp # web ui
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/prowlarr:/config # Prowlarr configs
+#    expose:
+#      - 9696/tcp # web ui
+#    ports:
+#      - 9696:9696/tcp # web ui
     restart: unless-stopped
-    #networks:
-    #  - proxy
-    #labels:
-    #  - traefik.enable=true
-    #  - traefik.docker.network=proxy
-    #  - traefik.http.routers.prowlarr.rule=Host(`prowlarr.example.com`)
-    #  - traefik.http.services.prowlarr.loadbalancer.server.port=9696
-    #  # Optional part for traefik middlewares
-    #  - traefik.http.routers.prowlarr.middlewares=local-ipwhitelist@file
+    network_mode: "service:gluetun"  # Use gluetun's network stack
 
-  # image used to scan for tv shows
+  # image used to bupass cloudflare for prowlarr
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=debug
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=America/Los_Angeles
+      - BROWSER_HEADLESS=false
+#    expose:
+      - 8191/tcp # listening port for selenium
+    restart: unless-stopped
+    network_mode: "service:gluetun" # Use glueton's network stoack
+
+  # Sonarr service to scan for TV shows
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
@@ -36,24 +43,17 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/configs/sonarr:/config # database and Radarr configs
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/media:/media # location of media and qbittorrent download folder
-    expose:
-      - 8989/tcp # web ui
-    ports:
-      - 8989:8989/tcp # web ui
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/sonarr:/config # Sonarr configs
+      - /media/Lazy4Drive/tv:/media # TV shows media directory
+      - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+#    expose:
+#      - 8989/tcp # web ui
+#    ports:
+#      - 8989:8989/tcp # web ui
     restart: unless-stopped
-    #networks:
-    #  - proxy
-    #labels:
-    #  - traefik.enable=true
-    #  - traefik.docker.network=proxy
-    #  - traefik.http.routers.sonarr.rule=Host(`sonarr.example.com`)
-    #  - traefik.http.services.sonarr.loadbalancer.server.port=8989
-    #  # Optional part for traefik middlewares
-    #  - traefik.http.routers.sonarr.middlewares=local-ipwhitelist@file
+    network_mode: "service:gluetun"  # Use gluetun's network stack
 
-  # image used to scan for movies
+  # Radarr service to scan for movies
   radarr:
     image: linuxserver/radarr:latest
     container_name: radarr
@@ -62,24 +62,17 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/configs/radarr:/config
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/media:/media # location of media and qbittorrent download folder
-    expose:
-      - 7878/tcp # web ui
-    ports:
-      - 7878:7878/tcp # web ui
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/radarr:/config
+      - /media/Lazy4Drive/movies:/media # Movies media directory
+      - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+#    expose:
+#      - 7878/tcp # web ui
+#    ports:
+#      - 7878:7878/tcp # web ui
     restart: unless-stopped
-    #networks:
-    #  - proxy
-    #labels:
-    #  - traefik.enable=true
-    #  - traefik.docker.network=proxy
-    #  - traefik.http.routers.radarr.rule=Host(`radarr.example.com`)
-    #  - traefik.http.services.radarr.loadbalancer.server.port=7878
-    #  # Optional part for traefik middlewares
-    #  - traefik.http.routers.radarr.middlewares=local-ipwhitelist@file
+    network_mode: "service:gluetun"  # Use gluetun's network stack
 
-  # image used to scan for books
+  # Readarr service to scan for books
   readarr:
     image: linuxserver/readarr:develop
     container_name: readarr
@@ -88,23 +81,17 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/configs/readarr:/config
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/media:/media # location of media and qbittorrent download folder
-    expose:
-      - 8787/tcp # web ui
-    ports:
-      - 8787:8787/tcp # web ui
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/readarr:/config
+      - /media/Lazy4Drive/books:/media # Books media directory 
+      - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+#    expose:
+#      - 8787/tcp # web ui
+#    ports:
+#      - 8787:8787/tcp # web ui
     restart: unless-stopped
-    #networks:
-    #  - proxy
-    #labels:
-    #  - traefik.enable=true
-    #  - traefik.docker.network=proxy
-    #  - traefik.http.routers.readarr.rule=Host(`readarr.example.com`)
-    #  - traefik.http.services.readarr.loadbalancer.server.port=8787
-    #  # Optional part for traefik middlewares
-    #  - traefik.http.routers.readarr.middlewares=local-ipwhitelist@services:
-  
+    network_mode: "service:gluetun"  # Use gluetun's network stack
+
+  # Calibre service for managing ebooks
   calibre:
     image: ghcr.io/linuxserver/calibre
     container_name: calibre
@@ -113,27 +100,28 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - path/to/your/calibre/config:/config #change before the ':'
-      - path/to/your/calibre/upload:/uploads #change before the ':'
-      - path/to/your/calibre/plugins:/plugins #change before the ':'
-      - path/to/your/CalibreLibrary:/Calibre_Library #this is where your ebooks will end up
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/calibre:/config
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/calibre/uploads:/uploads
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/calibre/plugins:/plugins
+      - /media/Lazy4Drive/books:/Calibre_Library # Books library directory
     ports:
-      - 8080:8080 #change before the ':' if necessary
-      - 8081:8081 #change before the ':' if necessary
+      - 8082:8080
+      - 8081:8081
     restart: unless-stopped
     networks:
       - ebooks
 
+  # Calibre-Web service providing a web interface to Calibre
   calibre-web:
     image: ghcr.io/linuxserver/calibre-web
     container_name: calibre-web
     environment:
-      - PUID=$PUID
-      - PGID=$PGID
+      - PUID=1000
+      - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - $DOCKERDIR/calibre/calibre-web:/config
-      - path/to/your/Calibre Library:/books
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/calibre-web:/config
+      - /media/Lazy4Drive/books:/books # Books directory
     restart: unless-stopped
     depends_on:
       - calibre
@@ -142,22 +130,7 @@ services:
     networks:
       - ebooks
 
-  # image used to bypass cloudflare for prowlarr
-  flaresolverr:
-    image: flaresolverr/flaresolverr:latest
-    container_name: arr-suite-flaresolverr
-    environment:
-      - LOG_LEVEL=info
-      - LOG_HTML=false
-      - CAPTCHA_SOLVER=none
-      - TZ=Europe/Berlin
-    expose:
-      - 8191/tcp # listening port for selenium
-    restart: unless-stopped
-    #networks:
-    #  - proxy    
-
-  # image used for vpn killswitch network
+  # Gluetun service for VPN with a kill switch
   gluetun:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
@@ -165,43 +138,42 @@ services:
       - NET_ADMIN
     ports:
       - 8080:8080 # qbittorrent http web ui
+      - 7878:7878 # Radarr web UI
+      - 8989:8989 # Sonarr web UI
+      - 9696:9696 # Prowlarr web UI
+      - 8787:8787 # Readarr web UI
+      - 5055:5055 # Overseerr
     environment:
-      # see https://github.com/qdm12/gluetun-wiki for more details
-      # example envs based on https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/mullvad.md
-      - VPN_SERVICE_PROVIDER=mullvad # define the vpn provider
-      - VPN_TYPE=wireguard # define the vpn protocol to use
-      - WIREGUARD_PRIVATE_KEY=wOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU= # define your wireguard private key here
-      - WIREGUARD_ADDRESSES=10.64.222.21/32 # define the ipv4 vpn network subnet here
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=R8wLr54NQtROwyIf+pmp # ProtonVPN username + +pmp
+      - OPENVPN_PASSWORD=ZBVkgfdIhQv9p110owtLPDgQPxPcAYGK # ProtonVPN password
+      - SERVER_CITIES=San Jose # Specify city to target servers near California
+      - VPN_PORT_FORWARDING=ON
+      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,51933
+#      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24
     volumes:
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/configs/gluetun:/gluetun
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/gluetun:/gluetun
     restart: unless-stopped
-    #networks:
-    #  - proxy
-    #labels:
-    #  - traefik.enable=true
-    #  - traefik.docker.network=proxy
-    #  - traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.example.com`)
-    #  - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
-    #  # Optional part for traefik middlewares
-    #  - traefik.http.routers.qbittorrent.middlewares=local-ipwhitelist@file
 
-  # image used to download stuff; run over gluetun network (vpn killswitch)
+  # qBittorrent service for downloading torrents
   qbittorrent:
     image: linuxserver/qbittorrent:latest
-    container_name: arr-suite-qbittorrent
+    container_name: qbittorrent
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/Berlin
+      - TZ=America/Los_Angeles
       - WEBUI_PORT=8080
+#      - WEBUI_USERNAME=admin  # Set your desired username
+#      - WEBUI_PASSWORD=adminadmin  # Set your desired password
     volumes:
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/configs/qbittorrent:/config
-      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/arr-suite/media/downloads:/media/downloads
-    depends_on:
-      - gluetun
-    network_mode: container:arr-suite-gluetun # use the gluetun container network (vpn killswitch)
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/qbittorrent:/config
+      - /media/Lazy4Drive/torrents:/downloads # Torrent downloads directory
+    network_mode: service:gluetun  # Use the gluetun container network (VPN killswitch) formerly container:gluetun
     restart: unless-stopped
 
+  # Plex service for media streaming
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
@@ -209,31 +181,42 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Los_Angeles
       - VERSION=docker
-      - PLEX_CLAIM= #optional
+      - PLEX_CLAIM=claim-GX1K-ssxkvWznxQAnXsC #optional
     volumes:
-      - /path/to/library:/config
-      - /path/to/tvseries:/tv
-      - /path/to/movies:/movies
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/plex:/config
+      - /media/Lazy4Drive/tv:/tv # TV series directory
+      - /media/Lazy4Drive/movies:/movies # Movies directory
     restart: unless-stopped
 
+  # Homarr service for dashboard management
+  homarr:
+    container_name: homarr
+    image: ghcr.io/ajnart/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Optional, for Docker integration
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/homarr:/app/data/configs
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/homarr/icons:/app/public/icons
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/homarr/data:/data
+    ports:
+      - 7575:7575 # Web UI port
+
+  # Overseerr service for media request management
   overseerr:
     image: sctx/overseerr:latest
     container_name: overseerr
     environment:
       - LOG_LEVEL=debug
-      - TZ=Asia/Tokyo
-      - PORT=5055 #optional
-    ports:
-      - 5055:5055
+      - TZ=America/Los_Angeles
+      - PORT=5055
+#    ports:
+#      - 5055:5055 # Web UI port
     volumes:
-      - /path/to/appdata/config:/app/config
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/overseerr:/app/config # Config path
     restart: unless-stopped
-
-#networks:
-#  proxy:
-#    external: true
+    network_mode: service:gluetun # Use the Gluetun network mode
 
 networks:
   ebooks:
