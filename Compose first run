@@ -156,6 +156,23 @@ services:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/gluetun:/gluetun
     restart: unless-stopped
 
+  # sabnzbd service to automate Usenet downloads
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/sabnzbd:/config
+      - /media/Lazy4Drive/usenet/downloads:/downloads
+      - /media/Lazy4Drive/usenet/incomplete:/incomplete-downloads
+    network_mode: "service:gluetun"
+#    ports:
+#      - 8085:8080  # Change Sabnzbd external port to 8085; port managed by Gluetun's network
+    restart: unless-stopped
+
   # qBittorrent service for downloading torrents
   qbittorrent:
     image: linuxserver/qbittorrent:latest
