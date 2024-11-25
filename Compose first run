@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
 
   # Prowlarr service to index torrent links
@@ -46,6 +44,7 @@ services:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/sonarr:/config # Sonarr configs
       - /media/Lazy4Drive/tv:/media # TV shows media directory
       - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads  # Usenet downloads directory
 #    expose:
 #      - 8989/tcp # web ui
 #    ports:
@@ -65,6 +64,7 @@ services:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/radarr:/config
       - /media/Lazy4Drive/movies:/media # Movies media directory
       - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads  # Usenet downloads directory
 #    expose:
 #      - 7878/tcp # web ui
 #    ports:
@@ -84,6 +84,7 @@ services:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/readarr:/config
       - /media/Lazy4Drive/books:/media # Books media directory 
       - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads # Usenet downloads directory
 #    expose:
 #      - 8787/tcp # web ui
 #    ports:
@@ -143,14 +144,15 @@ services:
       - 9696:9696 # Prowlarr web UI
       - 8787:8787 # Readarr web UI
       - 5055:5055 # Overseerr
+      - 8085:8085 # SABnzbd on external port 8085, internal port 8080
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=openvpn
       - OPENVPN_USER=R8wLr54NQtROwyIf+pmp # ProtonVPN username + +pmp
       - OPENVPN_PASSWORD=ZBVkgfdIhQv9p110owtLPDgQPxPcAYGK # ProtonVPN password
-      - SERVER_CITIES=San Jose # Specify city to target servers near California
+      - SERVER_CITIES=Los Angeles # Specify city to target servers near California
       - VPN_PORT_FORWARDING=ON
-      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,51933
+      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,8085
 #      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24
     volumes:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/gluetun:/gluetun
