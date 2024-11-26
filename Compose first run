@@ -72,6 +72,25 @@ services:
     restart: unless-stopped
     network_mode: "service:gluetun"  # Use gluetun's network stack
 
+  # Whisparr service for managing whisper-synced media
+  whisparr:
+    container_name: whisparr
+    image: ghcr.io/hotio/whisparr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/Los_Angeles # Change timezone if needed
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/whisparr:/config # Whisparr configs
+      - /media/Lazy4Drive/whispers:/data # Data directory for whispers
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads # Usenet downloads
+      - /media/Lazy4Drive/torrents:/torrent_downloads # Torrent downloads
+    restart: unless-stopped
+    network_mode: "service:gluetun" # Use Gluetun's network for VPN routing
+#    ports:
+#      - 6969:6969 # Whisparr WebUI port (managed by Gluetun)
+
   # Readarr service to scan for books
   readarr:
     image: linuxserver/readarr:develop
@@ -145,15 +164,18 @@ services:
       - 8787:8787 # Readarr web UI
       - 5055:5055 # Overseerr
       - 8085:8085 # SABnzbd on external port 8085, internal port 8080
+      - 6969:6969 # Whisparr web UI
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=openvpn
-      - OPENVPN_USER=R8wLr54NQtROwyIf+pmp # ProtonVPN username + +pmp
-      - OPENVPN_PASSWORD=ZBVkgfdIhQv9p110owtLPDgQPxPcAYGK # ProtonVPN password
+      - OPENVPN_USER=${OPENVPN_USER} # ProtonVPN username + +pmp
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD} # ProtonVPN password
       - SERVER_CITIES=Los Angeles # Specify city to target servers near California
       - VPN_PORT_FORWARDING=ON
-      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,8085
+      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,8085,6969
 #      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24
+#    env_file:
+#      - .env
     volumes:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/gluetun:/gluetun
     restart: unless-stopped
@@ -183,7 +205,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
-      - WEBUI_PORT=8080
+#      - WEBUI_PORT=${FORWARDED_PORT} # Use forwarded port from Gluetun
 #      - WEBUI_USERNAME=admin  # Set your desired username
 #      - WEBUI_PASSWORD=adminadmin  # Set your desired password
     volumes:
@@ -202,7 +224,7 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
       - VERSION=docker
-      - PLEX_CLAIM=claim-GX1K-ssxkvWznxQAnXsC #optional
+      - PLEX_CLAIM=${PLEX_CLAIM} #optional
     volumes:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/plex:/config
       - /media/Lazy4Drive/tv:/tv # TV series directory
