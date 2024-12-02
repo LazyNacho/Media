@@ -231,6 +231,40 @@ services:
       - /media/Lazy4Drive/movies:/movies # Movies directory
     restart: unless-stopped
 
+  # Stash: Video organizer service
+  stash:
+    image: stashapp/stash:latest
+    container_name: stash
+    restart: unless-stopped
+    ## the container's port must match the STASH_PORT value in the environment section
+    ports:
+      - "9999:9999" # Change to your desired port if needed
+    ## Uncomment the below `network_mode` to enable DLNA functionality and comment out the above `ports` section
+    # network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10" # Retain up to 10 log files
+        max-size: "2m" # Maximum size of each log file
+    environment:
+      - STASH_STASH=/data/
+      - STASH_GENERATED=/generated/
+      - STASH_METADATA=/metadata/
+      - STASH_CACHE=/cache/
+      ## Adjust below to change the default port (9999)
+      - STASH_PORT=9999
+    volumes:
+      - /etc/localtime:/etc/localtime:ro # Sync container time with the host
+      ## Define paths for stash configurations, collections, and content
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/stash:/root/.stash # Configs, scrapers, and plugins
+      - /media/Lazy4Drive/whispers:/data # Point to your media collection
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/metadata:/metadata # Metadata for stash
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/cache:/cache # Cache content
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/blobs:/blobs # Binary blob data (scene covers, images)
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/generated:/generated # Generated content (screenshots, previews, etc.)
+    networks:
+      - default # Use the default network or customize if needed
+
   # Homarr service for dashboard management
   homarr:
     container_name: homarr
