@@ -199,7 +199,7 @@ services:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/gluetun:/gluetun
 #    network_mode: bridge
     networks:
-      gluetun-shared
+      - gluetun-shared
     restart: unless-stopped
 
   # sabnzbd service to automate Usenet downloads
