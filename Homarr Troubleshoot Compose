@@ -1,0 +1,337 @@
+services:
+
+  # Prowlarr service to index torrent links
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/prowlarr:/config # Prowlarr configs
+#    expose:
+#      - 9696/tcp # web ui
+#    ports:
+#      - 9696:9696/tcp # web ui
+    restart: unless-stopped
+#    network_mode: "service:gluetun"  # Use gluetun's network stack
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.10  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # image used to bupass cloudflare for prowlarr
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=debug
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=America/Los_Angeles
+      - BROWSER_HEADLESS=false
+#    expose:
+      - 8191/tcp # listening port for selenium
+    restart: unless-stopped
+#    network_mode: "service:gluetun" # Use gluetun's network stack
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.11  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # Sonarr service to scan for TV shows
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/sonarr:/config # Sonarr configs
+      - /media/Lazy4Drive/tv:/media # TV shows media directory
+      - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads  # Usenet downloads directory
+#    expose:
+#      - 8989/tcp # web ui
+#    ports:
+#      - 8989:8989/tcp # web ui
+    restart: unless-stopped
+#    network_mode: "service:gluetun"  # Use gluetun's network stack
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.12  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # Radarr service to scan for movies
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/radarr:/config
+      - /media/Lazy4Drive/movies:/media # Movies media directory
+      - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads  # Usenet downloads directory
+#    expose:
+#      - 7878/tcp # web ui
+#    ports:
+#      - 7878:7878/tcp # web ui
+    restart: unless-stopped
+#    network_mode: "service:gluetun"  # Use gluetun's network stack
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.13  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+
+  # Whisparr service for managing whisper-synced media
+  whisparr:
+    container_name: whisparr
+    image: ghcr.io/hotio/whisparr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/Los_Angeles # Change timezone if needed
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/whisparr:/config # Whisparr configs
+      - /media/Lazy4Drive/whispers:/data # Data directory for whispers
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads # Usenet downloads
+      - /media/Lazy4Drive/torrents:/torrent_downloads # Torrent downloads
+    restart: unless-stopped
+#    network_mode: "service:gluetun" # Use Gluetun's network for VPN routing
+#    ports:
+#      - 6969:6969 # Whisparr WebUI port (managed by Gluetun)
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.18
+
+  # Readarr service to scan for books
+  readarr:
+    image: linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/readarr:/config
+      - /media/Lazy4Drive/books:/media # Books media directory 
+      - /media/Lazy4Drive/torrents:/downloads # Map the downloads directory
+      - /media/Lazy4Drive/usenet/downloads:/usenet_downloads # Usenet downloads directory
+#    expose:
+#      - 8787/tcp # web ui
+#    ports:
+#      - 8787:8787/tcp # web ui
+    restart: unless-stopped
+#    network_mode: "service:gluetun"  # Use gluetun's network stack
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.14  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # Calibre service for managing ebooks
+  calibre:
+    image: ghcr.io/linuxserver/calibre
+    container_name: calibre
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/calibre:/config
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/calibre/uploads:/uploads
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/calibre/plugins:/plugins
+      - /media/Lazy4Drive/books:/Calibre_Library # Books library directory
+    ports:
+      - 8082:8080
+      - 8081:8081
+    restart: unless-stopped
+    networks:
+      - ebooks
+
+  # Calibre-Web service providing a web interface to Calibre
+  calibre-web:
+    image: ghcr.io/linuxserver/calibre-web
+    container_name: calibre-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/calibre-web:/config
+      - /media/Lazy4Drive/books:/books # Books directory
+    restart: unless-stopped
+    depends_on:
+      - calibre
+    ports:
+      - 8083:8083
+    networks:
+      - ebooks
+
+  # Gluetun service for VPN with a kill switch
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    ports:
+#      - 8080:8080 # qbittorrent http web ui
+      - 7878:7878 # Radarr web UI
+      - 8989:8989 # Sonarr web UI
+      - 9696:9696 # Prowlarr web UI
+      - 8787:8787 # Readarr web UI
+      - 5055:5055 # Overseerr
+      - 8085:8085 # SABnzbd on external port 8085, internal port 8080
+      - 6969:6969 # Whisparr web UI
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=${OPENVPN_USER} # ProtonVPN username + +pmp
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD} # ProtonVPN password
+      - SERVER_CITIES=Los Angeles # Specify city to target servers near California
+      - VPN_PORT_FORWARDING=ON
+      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,8085,6969
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24,192.168.10.0/24
+#    env_file:
+#      - .env
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/gluetun:/gluetun
+#    network_mode: bridge
+    networks:
+      gluetun-shared
+    restart: unless-stopped
+
+  # sabnzbd service to automate Usenet downloads
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/sabnzbd:/config
+      - /media/Lazy4Drive/usenet/downloads:/downloads
+      - /media/Lazy4Drive/usenet/incomplete:/incomplete-downloads
+#    network_mode: "service:gluetun"
+#    ports:
+#      - 8085:8080  # Change Sabnzbd external port to 8085; port managed by Gluetun's network
+    restart: unless-stopped
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.15  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # qBittorrent service for downloading torrents
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+#      - WEBUI_PORT=${FORWARDED_PORT} # Use forwarded port from Gluetun
+#      - WEBUI_USERNAME=admin  # Set your desired username
+#      - WEBUI_PASSWORD=adminadmin  # Set your desired password
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/qbittorrent:/config
+      - /media/Lazy4Drive/torrents:/downloads # Torrent downloads directory
+#    network_mode: service:gluetun  # Use the gluetun container network (VPN killswitch) formerly container:gluetun
+    restart: unless-stopped
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.16  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # Plex service for media streaming
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM} #optional
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/plex:/config
+      - /media/Lazy4Drive/tv:/tv # TV series directory
+      - /media/Lazy4Drive/movies:/movies # Movies directory
+    restart: unless-stopped
+
+  # Stash: Video organizer service
+  stash:
+    image: stashapp/stash:latest
+    container_name: stash
+    restart: unless-stopped
+    ## the container's port must match the STASH_PORT value in the environment section
+    ports:
+      - "9999:9999" # Change to your desired port if needed
+    ## Uncomment the below `network_mode` to enable DLNA functionality and comment out the above `ports` section
+    # network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10" # Retain up to 10 log files
+        max-size: "2m" # Maximum size of each log file
+    environment:
+      - STASH_STASH=/data/
+      - STASH_GENERATED=/generated/
+      - STASH_METADATA=/metadata/
+      - STASH_CACHE=/cache/
+      ## Adjust below to change the default port (9999)
+      - STASH_PORT=9999
+    volumes:
+      - /etc/localtime:/etc/localtime:ro # Sync container time with the host
+      ## Define paths for stash configurations, collections, and content
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/stash:/root/.stash # Configs, scrapers, and plugins
+      - /media/Lazy4Drive/whispers:/data # Point to your media collection
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/metadata:/metadata # Metadata for stash
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/cache:/cache # Cache content
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/blobs:/blobs # Binary blob data (scene covers, images)
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/stash/generated:/generated # Generated content (screenshots, previews, etc.)
+    networks:
+      - default # Use the default network or customize if needed
+
+  # Homarr service for dashboard management
+  homarr:
+    container_name: homarr
+    image: ghcr.io/ajnart/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Optional, for Docker integration
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/homarr:/app/data/configs
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/homarr/icons:/app/public/icons
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/homarr/data:/data
+    ports:
+      - 7575:7575 # Web UI port
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.19  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+  # Overseerr service for media request management
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=America/Los_Angeles
+      - PORT=5055
+#    ports:
+#      - 5055:5055 # Web UI port
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/overseerr:/app/config # Config path
+    restart: unless-stopped
+#    network_mode: service:gluetun # Use the Gluetun network mode
+    networks:
+      gluetun-shared:
+        ipv4_address: 192.168.10.17  # Assigning a static IP in custom network "gluetun-shared" within defined range
+
+networks:
+  gluetun-shared:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
+  ebooks:
+    external: true
