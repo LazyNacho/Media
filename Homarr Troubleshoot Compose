@@ -12,8 +12,8 @@ services:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/prowlarr:/config # Prowlarr configs
 #    expose:
 #      - 9696/tcp # web ui
-#    ports:
-#      - 9696:9696/tcp # web ui
+    ports:
+      - 9696:9696/tcp # web ui
     restart: unless-stopped
 #    network_mode: "service:gluetun"  # Use gluetun's network stack
     networks:
@@ -53,8 +53,8 @@ services:
       - /media/Lazy4Drive/usenet/downloads:/usenet_downloads  # Usenet downloads directory
 #    expose:
 #      - 8989/tcp # web ui
-#    ports:
-#      - 8989:8989/tcp # web ui
+    ports:
+      - 8989:8989/tcp # web ui
     restart: unless-stopped
 #    network_mode: "service:gluetun"  # Use gluetun's network stack
     networks:
@@ -76,8 +76,8 @@ services:
       - /media/Lazy4Drive/usenet/downloads:/usenet_downloads  # Usenet downloads directory
 #    expose:
 #      - 7878/tcp # web ui
-#    ports:
-#      - 7878:7878/tcp # web ui
+    ports:
+      - 7878:7878/tcp # web ui
     restart: unless-stopped
 #    network_mode: "service:gluetun"  # Use gluetun's network stack
     networks:
@@ -101,8 +101,8 @@ services:
       - /media/Lazy4Drive/torrents:/torrent_downloads # Torrent downloads
     restart: unless-stopped
 #    network_mode: "service:gluetun" # Use Gluetun's network for VPN routing
-#    ports:
-#      - 6969:6969 # Whisparr WebUI port (managed by Gluetun)
+    ports:
+      - 6969:6969 # Whisparr WebUI port (managed by Gluetun)
     networks:
       gluetun-shared:
         ipv4_address: 192.168.10.18
@@ -122,8 +122,8 @@ services:
       - /media/Lazy4Drive/usenet/downloads:/usenet_downloads # Usenet downloads directory
 #    expose:
 #      - 8787/tcp # web ui
-#    ports:
-#      - 8787:8787/tcp # web ui
+    ports:
+      - 8787:8787/tcp # web ui
     restart: unless-stopped
 #    network_mode: "service:gluetun"  # Use gluetun's network stack
     networks:
@@ -176,7 +176,7 @@ services:
     cap_add:
       - NET_ADMIN
     ports:
-#      - 8080:8080 # qbittorrent http web ui
+      - 8080:8080 # qbittorrent http web ui
       - 7878:7878 # Radarr web UI
       - 8989:8989 # Sonarr web UI
       - 9696:9696 # Prowlarr web UI
@@ -215,8 +215,8 @@ services:
       - /media/Lazy4Drive/usenet/downloads:/downloads
       - /media/Lazy4Drive/usenet/incomplete:/incomplete-downloads
 #    network_mode: "service:gluetun"
-#    ports:
-#      - 8085:8080  # Change Sabnzbd external port to 8085; port managed by Gluetun's network
+    ports:
+      - 8085:8080  # Change Sabnzbd external port to 8085; port managed by Gluetun's network
     restart: unless-stopped
     networks:
       gluetun-shared:
@@ -317,8 +317,8 @@ services:
       - LOG_LEVEL=debug
       - TZ=America/Los_Angeles
       - PORT=5055
-#    ports:
-#      - 5055:5055 # Web UI port
+    ports:
+      - 5055:5055 # Web UI port
     volumes:
       - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/LazyTime/configs/overseerr:/app/config # Config path
     restart: unless-stopped
