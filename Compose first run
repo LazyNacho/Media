@@ -26,11 +26,11 @@ services:
       - LOG_HTML=false
       - CAPTCHA_SOLVER=none
       - TZ=America/Los_Angeles
-      - BROWSER_HEADLESS=false
-#    expose:
-      - 8191/tcp # listening port for selenium
+#      - BROWSER_HEADLESS=false
+    ports:
+      - 8191:8191 # listening port for selenium
     restart: unless-stopped
-    network_mode: "service:gluetun" # Use glueton's network stoack
+#    network_mode: "service:gluetun" # Use glueton's network stoack
 
   # Sonarr service to scan for TV shows
   sonarr:
@@ -107,9 +107,11 @@ services:
 #    expose:
 #      - 8787/tcp # web ui
 #    ports:
-#      - 8787:8787/tcp # web ui
+#      - 8787:8787 # web ui
     restart: unless-stopped
-    network_mode: "service:gluetun"  # Use gluetun's network stack
+    network_mode: "service:gluetun" # Use gluetun's network stack
+#    networks:
+#       - ebooks
 
   # Calibre service for managing ebooks
   calibre:
@@ -172,8 +174,8 @@ services:
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD} # ProtonVPN password
       - SERVER_CITIES=Los Angeles # Specify city to target servers near California
       - VPN_PORT_FORWARDING=ON
-      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,8787,5055,8085,6969
-#      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24
+      - FIREWALL_VPN_INPUT_PORTS=8080,7878,8989,9696,5055,8085,6969,8787
+#      - FIREWALL_OUTBOUND_SUBNETS=0.0.0.0/0  # Allow all outbound traffic (Internet)
 #    env_file:
 #      - .env
     volumes:
